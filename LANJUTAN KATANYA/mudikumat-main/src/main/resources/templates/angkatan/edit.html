@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit akun</title>
+</head>
+<body>
+<form th:fragment="edit_akun" id="edit" class="kartu-kecil kartu solid bayangan flex-v gap-16">
+    <h3>Edit akun</h3>
+    <div class="flex-v gap-32 bisa-discroll">
+        <div class="input">
+            <input type="text" name="id" id="id" spellcheck="false" required placeholder="NIM/NIDN">
+            <label for="id">NIM/NIDN</label>
+        </div>
+        <div class="input">
+            <input type="text" name="namaPengguna" id="nama-pengguna" spellcheck="false" placeholder="Nama pengguna">
+            <label for="nama-pengguna">Nama pengguna</label>
+        </div>
+        <div class="input">
+            <input type="text" name="nama" id="nama" spellcheck="false" required placeholder="Nama">
+            <label for="nama">Nama</label>
+        </div>
+        <div class="input">
+            <div class="flex-h jc-space-between">
+                Jenis kelamin
+                <label for="laki-laki">
+                    <input type="radio" name="jenisKelamin" id="laki-laki" value="0">
+                    Laki-laki
+                </label>
+                <label for="perempuan">
+                    <input type="radio" name="jenisKelamin" id="perempuan" value="1">
+                    Perempuan
+                </label>
+            </div>
+        </div>
+        <div class="flex-v gap-16">
+            <h4>Daerah asal</h4>
+            <div class="flex-h gap-16">
+                <div class="input">
+                    <select id="provinsi-asal" class="provinsi">
+                        <option th:each="provinsi: ${daftarProvinsi}"
+                                th:value="${provinsi.id}"
+                                th:text="${provinsi.nama}"></option>
+                    </select>
+                    <label for="provinsi-asal">Provinsi</label>
+                </div>
+                <div class="input">
+                    <select name="daerahAsal" id="kabupaten-asal" class="kabupaten" required></select>
+                    <label for="kabupaten-asal">Kabupaten/kota</label>
+                </div>
+            </div>
+        </div>
+        <div class="flex-v gap-16">
+            <h4>Tempat lahir</h4>
+            <div class="flex-h gap-16">
+                <div class="input">
+                    <select id="provinsi-lahir" class="provinsi">
+                        <option th:each="provinsi: ${daftarProvinsi}"
+                                th:value="${provinsi.id}"
+                                th:text="${provinsi.nama}"></option>
+                    </select>
+                    <label for="provinsi-lahir">Provinsi</label>
+                </div>
+                <div class="input">
+                    <select name="tempatLahir" id="kabupaten-lahir" class="kabupaten" required></select>
+                    <label for="kabupaten-lahir">Kabupaten/kota</label>
+                </div>
+            </div>
+        </div>
+        <div class="input">
+            <input type="date" name="tanggalLahir" id="tanggal-lahir">
+            <label for="tanggal-lahir">Tanggal lahir</label>
+        </div>
+        <div class="input">
+            <select name="programStudi" id="program-studi">
+                <option th:each="programStudi: ${daftarProgramStudi}"
+                        th:value="${programStudi.id}"
+                        th:text="${programStudi.jenjang.nama} + ' ' + ${programStudi.jurusan.nama}"></option>
+            </select>
+            <label for="program-studi">Program studi</label>
+        </div>
+        <div class="input">
+            <select name="angkatan" id="angkatan">
+                <option th:each="angkatan: ${daftarAngkatan}"
+                        th:value="${angkatan.nomor}"
+                        th:text="${angkatan.nomor} + ' (' + ${angkatan.nama} + ')'"></option>
+            </select>
+            <label for="angkatan">Angkatan</label>
+        </div>
+    </div>
+    <div class="flex-h jc-space-between">
+        <button type="reset" class="tombol border-berwarna tombol-bulat tombol-lebar tombol-tutup">Batal</button>
+        <button type="submit" class="tombol berwarna tombol-bulat tombol-lebar">Simpan</button>
+    </div>
+    <script>
+        function edit(id) {
+            $.get({
+                url: '/api/akun/' + id,
+                success: function (response) {
+                    $('#edit h3').text('Edit akun (' + response.nama + ')');
+                    $('#id').val(response.id);
+                    $('#nama-pengguna').val(response.namaPengguna);
+                    $('#nama').val(response.nama);
+                    $('input[name=jenisKelamin]').val([response.jenisKelamin]);
+                    $('#provinsi-asal').val(response.daerahAsal.provinsi.id);
+                    $('#provinsi-lahir').val(response.tempatLahir.provinsi.id);
+                    $('#kabupaten-asal').data('nilai', response.daerahAsal.id);
+                    $('#kabupaten-lahir').data('nilai', response.tempatLahir.id);
+                    $('.provinsi').change();
+                    $('#tanggal-lahir').val(response.tanggalLahir);
+                    const programStudi = $('#program-studi');
+                    if (response.programStudi != null) {
+                        programStudi.val(response.programStudi.id);
+                        programStudi.parent().tampilkan();
+                    } else {
+                        programStudi.val(null);
+                        programStudi.parent().hide();
+                    }
+                    const angkatan = $('#angkatan');
+                    if (response.angkatan != null) {
+                        angkatan.val(response.angkatan.nomor);
+                        angkatan.parent().tampilkan();
+                    } else {
+                        angkatan.val(null);
+                        angkatan.parent().hide();
+                    }
+                    $('#edit').bukaModal();
+                }
+            });
+        }
+
+        $('#nama').keyup(function () {
+            $('#edit h3').text('Edit akun (' + $(this).val() + ')');
+        });
+
+        $('.provinsi').change(function () {
+            let elemen = $(this);
+            $.get({
+                url: '/api/provinsi/' + elemen.val() + '/kabupaten',
+                success: function (response) {
+                    let elemenKabupaten = elemen.parents('.flex-h').find('.kabupaten');
+                    elemenKabupaten.empty();
+                    for (let kabupaten of response) {
+                        elemenKabupaten.append((new Option(kabupaten.nama, kabupaten.id)));
+                    }
+                    elemenKabupaten.val(elemenKabupaten.data('nilai'));
+                }
+            });
+        })
+
+        $('#edit').submit(function (event) {
+            event.preventDefault();
+            $.ajax({
+                url: '/api/kelola/akun/' + this.id.value,
+                contentType:'application/json',
+                type: 'PUT',
+                data: JSON.stringify({
+                    'namaPengguna': $(this.namaPengguna).getNilai(),
+                    'nama': this.nama.value,
+                    'jenisKelamin': this.jenisKelamin.value,
+                    'daerahAsal': {'id': this.daerahAsal.value},
+                    'tempatLahir': {'id': this.tempatLahir.value},
+                    'tanggalLahir': this.tanggalLahir.value,
+                    'programStudi': $(this.programStudi).getNilaiKey('id'),
+                    'angkatan': $(this.angkatan).getNilaiKey('nomor')
+                }),
+                success: function () {
+                    tampilkanToast('Akun berhasil disimpan')
+                    $('#edit').find('.tombol-tutup').click();
+                    entitasTerpilih.perbaruiEntitas();
+                    if ($('#detail').is(':visible')) {
+                        detail($(entitasTerpilih).data('id'));
+                        modalTerbuka.pop();
+                    }
+                }
+            });
+        });
+    </script>
+</form>
+</body>
+</html>

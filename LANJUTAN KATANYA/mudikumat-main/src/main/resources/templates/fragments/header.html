@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header th:fragment="header" class="solid bayangan">
+    <div id="header" class="flex-h jc-space-between">
+        <div class="flex-h">
+            <a class="logo tombol kotak" th:href="@{/}">
+                <span class="logo-mudik">Mudik</span><span class="logo-umat">Umat</span>
+            </a>
+            <nav class="flex-h">
+                <a class="tombol" th:href="@{/}"
+                   th:classappend="${#httpServletRequest.getRequestURI() == '/' ? 'aktif':''}">Beranda</a>
+                <a class="tombol" th:href="@{/mudik/{id}(id=${#authentication.principal.akun.id})}"
+                   th:classappend="${#httpServletRequest.getRequestURI() == '/mudik_saya' ? 'aktif':''}"
+                   sec:authorize="isAuthenticated()" id="tombol-mudik-saya">Mudik saya</a>
+                <a class="tombol" th:href="@{/tentang}"
+                   th:classappend="${#httpServletRequest.getRequestURI() == '/tentang' ? 'aktif':''}">Tentang</a>
+            </nav>
+        </div>
+        <div class="flex-h gap-8 padding-8">
+            <th:block sec:authorize="isAuthenticated()" th:with="akun=${#authentication.principal.akun}">
+                <a th:text="${akun.nama}"
+                   th:href="@{akun/{id}/detail(id=${akun.id})}"
+                   class="tombol tombol-bulat border tombol-detail-akun principal"
+                   th:data-id="${akun.id}"></a>
+                <a th:href="@{/keluar}" class="tombol berwarna tombol-bulat">Keluar</a>
+            </th:block>
+            <th:block sec:authorize="!isAuthenticated()">
+                <a th:href="@{/login}" class="tombol berwarna tombol-bulat tombol-login">Login</a>
+            </th:block>
+        </div>
+    </div>
+    <nav class="flex-h" sec:authorize="hasRole('ROLE_ADMIN')" id="panel-admin">
+        <div class="judul flex-h gap-8">
+            <span class="material-icons-outlined">admin_panel_settings</span>
+            Panel admin
+        </div>
+        <a class="tombol" th:each="entitas: ${daftarEntitas}" th:href="@{/kelola/{idEntitas}(idEntitas=${entitas.id})}"
+           th:classappend="${#httpServletRequest.getRequestURI() == '/kelola/' + entitas.id ? 'aktif':''}" th:text="${entitas.nama}"></a>
+    </nav>
+    <script>
+        $('.tombol-detail-akun').click(function (event) {
+            event.preventDefault();
+            entitasTerpilih = this;
+            detailAkun($(this).data('id'));
+        });
+
+        $('nav>.tombol').click(function (event) {
+            event.preventDefault();
+            muatContent(event.target);
+        });
+
+        function muatContent(tombol) {
+            const content = $('#content');
+            const loader = $('#loader');
+            content.hide();
+            loader.tampilkan();
+            $('nav>.aktif').removeClass('aktif');
+            $(tombol).addClass('memuat');
+            history.pushState(null, null, $(tombol).attr('href'));
+            $.get($(tombol).attr('href'), function(data) {
+                document.title = $(data).filter('title').text();
+                content.replaceWith($(data).filter('#content'));
+                $('#modal').replaceWith($(data).filter('#modal'));
+                loader.hide();
+                content.tampilkan();
+                $('nav>.aktif').removeClass('aktif');
+                $('nav>.memuat').removeClass('memuat');
+                $(tombol).addClass('aktif');
+            });
+        }
+    </script>
+</header>
+</body>
+</html>

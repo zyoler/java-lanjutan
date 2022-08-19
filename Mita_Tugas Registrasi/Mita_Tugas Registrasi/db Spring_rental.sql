@@ -1,0 +1,46 @@
+CREATE DATABASE spring_rental;
+
+CREATE TABLE admin(
+	id INT PRIMARY KEY NOT NULL,
+	username VARCHAR(30) NOT NULL,
+	PASSWORD VARCHAR(30) NOT NULL
+);
+
+INSERT INTO admin VALUES (1, 'mitazu','libra');
+
+CREATE TABLE member(
+	id_member INT PRIMARY KEY NOT NULL,
+	no_ktp CHAR(16) NOT NULL,
+	nama_member VARCHAR(30) NOT NULL,
+	tgl_lahir DATE NOT NULL,
+	no_telpon CHAR(13) NOT NULL,
+	jenis_kelamin VARCHAR(15) NOT NULL,
+	alamat VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE paket(
+	id_paket INT PRIMARY KEY NOT NULL,
+	nama_paket VARCHAR(30) NOT NULL,
+	diskon INT NOT NULL,
+	lama_rental INT NOT NULL
+);
+CREATE TABLE supir(
+	id_supir INT PRIMARY KEY NOT NULL,
+	nama_supir VARCHAR(30) NOT NULL,
+	alamat VARCHAR(30) NOT NULL,
+	no_telp CHAR(13) NOT NULL,
+	harga_perhari INT NOT NULL,
+	STATUS VARCHAR(30) NOT NULL
+);
+CREATE TABLE mobil(
+	id_mobil INT PRIMARY KEY NOT NULL,
+	nama_mobil VARCHAR(30) NOT NULL,
+	merk VARCHAR(30) NOT NULL,
+	warna VARCHAR(30) NOT NULL,
+	tahun DATE NOT NULL,
+	seri_kota CHAR(2) NOT NULL,
+	no_polisi INT(4) NOT NULL,
+	huruf CHAR(20) NOT NULL,
+	harga INT NOT NULL,
+	STATUS VARCHAR(30) NOT NULL
+);

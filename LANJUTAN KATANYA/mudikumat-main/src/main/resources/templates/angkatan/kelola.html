@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Kelola angkatan</title>
+</head>
+<body>
+<main layout:fragment="content" id="content" class="flex-v gap-4 padding-16">
+    <div class="flex-h gap-16 ai-baseline">
+        <h3>Kelola angkatan</h3>
+        <div class="penelusuran">
+            <span class="material-icons-outlined">search</span>
+            <input type="text" placeholder="Telusuri angkatan" aria-label="Telusuri angkatan" spellcheck="false">
+        </div>
+        <button id="tombol-buat" class="tombol berwarna tombol-bulat">Buat</button>
+    </div>
+    <div class="daftar bisa-discroll flex-v">
+        <div class="baris header-daftar flex-h">
+            <div>Nomor</div>
+            <div>Nama</div>
+            <div>Yel-yel</div>
+            <div class="flex-h gap-8" hidden>
+                <div class="tombol-ikon-bulat"></div>
+                <div class="tombol-ikon-bulat"></div>
+            </div>
+        </div>
+        <div class="isi-daftar bisa-discroll">
+            <div th:each="angkatan: ${daftarAngkatan}" class="baris entitas flex-h tombol-detail-akun"
+                 th:data-id="${angkatan.nomor}">
+                <div th:text="${angkatan.nomor}" class="id"></div>
+                <div th:text="${angkatan.nama}" class="nama"></div>
+                <div th:text="${angkatan.yelYel}" class="yel-yel"></div>
+                <div class="flex-h gap-8">
+                    <button class="tombol-edit tombol tombol-ikon-bulat" title="Edit akun">
+                        <span class="material-icons-outlined">edit</span>
+                    </button>
+                    <button class="tombol tombol-ikon-bulat" title="Hapus akun">
+                        <span class="material-icons-outlined">delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('.isi-daftar .tombol-detail-akun').click(function (event) {
+            event.preventDefault();
+            entitasTerpilih = this;
+            detail($(this).data('id'));
+        });
+
+        $('.isi-daftar .tombol-edit').click(function (event) {
+            event.stopPropagation();
+            entitasTerpilih = $(this).parents('.entitas');
+            edit(entitasTerpilih.data('id'));
+        });
+
+        $('.penelusuran>input').keyup(function () {
+            for (let entitas of $('.entitas')) {
+                const nomor = $(entitas).find('.id').text();
+                const nama = $(entitas).find('.nama').text();
+                const yelYel = $(entitas).find('.yel-yel').text();
+                if ((' ' + nomor + ' ' + nama.toLowerCase() + ' ' + yelYel.toLowerCase()).indexOf(' ' + $(this).val().toLowerCase()) > -1) {
+                    $(entitas).tampilkan();
+                } else {
+                    $(entitas).hide();
+                }
+            }
+        });
+
+        $.fn.perbaruiEntitas = function () {
+            const id = $(this).data('id');
+            $.get({
+                url: '/api/akun/' + id,
+                success: function (response) {
+                    $(this).find('.nama').text(response.nama);
+                    $(this).find('.namaPengguna').text(response.namaPengguna);
+                    $.get({
+                        url: '/api/akun/' + id + '/deskripsi',
+                        success: function (response) {
+                            $(this).find('.deskripsi').text(response);
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</main>
+</body>
+</html>

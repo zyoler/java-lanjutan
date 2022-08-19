@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail mudik</title>
+</head>
+<body>
+<main layout:fragment="content" id="content" class="flex-v ai-center jc-center padding-16">
+    <div th:fragment="content" id="detail-mudik" class="kartu-kecil kartu solid bayangan flex-v gap-16" th:data-id="${mudik?.id}">
+        <h3>Detail mudik (<span class="nama-pemudik"></span>)</h3>
+        <h4 class="deskripsi"></h4>
+        <div class="flex-v gap-32 bisa-discroll">
+            <div class="flex-h jc-space-between">
+                Waktu berangkat
+                <div class="waktu-berangkat"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                Tanggal berangkat
+                <div class="tanggal-berangkat"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                Waktu kembali
+                <div class="waktu-kembali"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                Tanggal kembali
+                <div class="tanggal-kembali"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                Kabupaten/kota tujuan
+                <div class="kabupaten-tujuan"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                Provinsi tujuan
+                <div class="provinsi-tujuan"></div>
+            </div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <button type="reset" class="tombol border-berwarna tombol-bulat tombol-lebar tombol-tutup"
+                    onclick="tutupModal()">Tutup
+            </button>
+            <button class="tombol berwarna tombol-bulat tombol-lebar tombol-berikutnya tombol-edit">Edit</button>
+        </div>
+        <script>
+            $('.isi-daftar .tombol-detail-mudik').click(function () {
+                entitasTerpilih = this;
+                detailMudik($(this).data('id'));
+                $('#detail-mudik').bukaModal();
+            });
+
+            $('#detail-mudik .deskripsi').textillate({autoStart: false, in: {effect: 'rollIn'}});
+
+            $('#detail-mudik .tombol-edit').click(function () {
+                editMudik($(entitasTerpilih).data('id'));
+            });
+
+            function detailMudik(id) {
+                $.get({
+                    url: '/api/mudik/' + id,
+                    success: function (response) {
+                        $('#detail-mudik .nama-pemudik').text(response.namaPemudik);
+                        $.get({
+                            url: '/api/akun/' + id + '/deskripsi',
+                            success: function (response) {
+                                let deskripsi = $('#detail-mudik .deskripsi');
+                                deskripsi.ubahTeks(response);
+                                deskripsi.textillate('in');
+                            }
+                        });
+                        const tanggalBerangkat = new Date(response.berangkat);
+
+                        function formatWaktu(tanggal) {
+                            const jam = tanggal.getHours().toString().padStart(2, '0');
+                            const menit = tanggal.getMinutes().toString().padStart(2, '0');
+                            return jam + '.' + menit + ' WIB';
+                        }
+
+                        $('#detail-mudik .waktu-berangkat').text(formatWaktu(tanggalBerangkat));
+                        const namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        $('#detail-mudik .tanggal-berangkat').text(tanggalBerangkat.getDate() + ' ' + namaBulan[tanggalBerangkat.getMonth()] + ' ' + tanggalBerangkat.getFullYear());
+                        const tanggalKembali = new Date(response.kembali);
+                        $('#detail-mudik .waktu-kembali').text(formatWaktu(tanggalKembali));
+                        $('#detail-mudik .tanggal-kembali').text(tanggalKembali.getDate() + ' ' + namaBulan[tanggalKembali.getMonth()] + ' ' + tanggalKembali.getFullYear());
+                        $('#detail-mudik .kabupaten-tujuan').text(response.tujuan.nama);
+                        $('#detail-mudik .provinsi-tujuan').text(response.tujuan.provinsi.nama);
+                    }
+                });
+            }
+        </script>
+    </div>
+    <script>
+        $('.tombol-tutup').hide();
+        entitasTerpilih = $('#detail-mudik');
+        entitasTerpilih.css('max-height', '90%');
+        detailMudik(entitasTerpilih.data('id'));
+    </script>
+</main>
+<th:block layout:fragment="modal">
+    <div th:replace="mudik/edit :: content"></div>
+</th:block>
+</body>
+</html>

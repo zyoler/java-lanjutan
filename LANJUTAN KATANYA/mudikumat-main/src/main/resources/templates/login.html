@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Login</title>
+</head>
+<body>
+<main layout:fragment="content" id="content" class="flex-v ai-center jc-center padding-16">
+    <div th:fragment="login" id="login" class="kartu-kecil kartu solid bayangan flex-v gap-16">
+        <h3 class="logo">
+            <span class="logo-mudik">Mudik</span><span class="logo-umat">Umat</span>
+        </h3>
+        <form id="form-periksa" class="flex-v gap-32">
+            <div class="header flex-v gap-8 rata-tengah">
+                <h2>Login</h2>
+                <h3>menggunakan Akun PUB.</h3>
+                <h4>Jabatan Anda menentukan hak akses Anda.</h4>
+            </div>
+
+            <div class="input">
+                <input type="text" name="id" id="periksa" class="border" spellcheck="false" required placeholder="NIM/NIDN atau nama pengguna">
+                <label for="periksa">NIM/NIDN atau nama pengguna</label>
+                <div class="notifikasi"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                <button type="reset" class="tombol border-berwarna tombol-bulat tombol-lebar tombol-tutup">Batal</button>
+                <button type="submit" id="tombol-berikutnya" class="tombol berwarna tombol-bulat tombol-lebar tombol-berikutnya">Berikutnya</button>
+            </div>
+        </form>
+        <form id="form-login" class="flex-v gap-32" style="display: none">
+            <input type="hidden" name="id" id="id">
+            <div class="header flex-v gap-8 rata-tengah">
+                <h2>Selamat datang</h2>
+                <h3 id="nama"></h3>
+                <h4 class="deskripsi"></h4>
+            </div>
+            <div class="input">
+                <input type="password" name="kataSandi" id="kata-sandi" class="border" spellcheck="false" required placeholder="Kata sandi">
+                <label for="kata-sandi">Kata sandi</label>
+                <div class="notifikasi"></div>
+            </div>
+            <div class="flex-h jc-space-between">
+                <button type="reset" id="tombol-kembali" class="tombol border-berwarna tombol-bulat tombol-lebar">Kembali</button>
+                <button type="submit" id="tombol-login" class="tombol berwarna tombol-bulat tombol-lebar tombol-berikutnya">Login</button>
+            </div>
+        </form>
+        <script src="/js/login.js"></script>
+    </div>
+    <script>
+        $('.tombol-tutup').hide();
+
+        $('#periksa').focus();
+    </script>
+</main>
+</body>
+</html>

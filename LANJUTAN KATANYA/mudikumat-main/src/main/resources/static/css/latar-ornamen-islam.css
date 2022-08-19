@@ -1,0 +1,99 @@
+.latar-ornamen-islam {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.latar-ornamen-islam > * {
+    position: absolute;
+    width: calc(4vw + 4vh);
+    height: calc(4vw + 4vh);
+    background-image: url(/images/ornamen-islam.svg);
+    bottom: -24vw;
+    animation: terbang 24s linear infinite;
+}
+
+.latar-ornamen-islam > .y1 {
+    bottom: 40vw;
+    animation-delay: 0s;
+    animation-iteration-count: initial;
+    animation-fill-mode: forwards;
+}
+
+.latar-ornamen-islam > .y2 {
+    bottom: 8vw;
+    animation-delay: 0s;
+    animation-iteration-count: initial;
+    animation-fill-mode: forwards;
+}
+
+.latar-ornamen-islam > .y3 {
+    animation-delay: 0s;
+}
+
+.latar-ornamen-islam > .y4 {
+    animation-delay: 6s;
+}
+
+.latar-ornamen-islam > .y5 {
+    animation-delay: 12s;
+}
+
+.latar-ornamen-islam > .y6 {
+    animation-delay: 18s;
+}
+
+.latar-ornamen-islam > .a1 {
+    left: -8vw;
+}
+
+.latar-ornamen-islam > .a2 {
+    left: calc(100vw / 3 - 12vw);
+    animation-name: terbang2;
+}
+
+.latar-ornamen-islam > .a3 {
+    right: calc(100vw / 3 - 12vw);
+}
+
+.latar-ornamen-islam > .a4 {
+    right: -8vw;
+    animation-name: terbang2;
+}
+
+.latar-ornamen-islam > .b1 {
+    left: calc(100vw / 6 - 12vw);
+}
+
+.latar-ornamen-islam > .b2 {
+    left: 37vw;
+    animation-name: terbang2;
+}
+
+.latar-ornamen-islam > .b3 {
+    right: calc(100vw / 6 - 12vw);
+}
+
+@keyframes terbang {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: translateY(-200vh) scale(5);
+    }
+}
+
+@keyframes terbang2 {
+    0% {
+        transform: scale(5);
+    }
+
+    100% {
+        transform: translateY(-200vh) scale(1);
+    }
+}

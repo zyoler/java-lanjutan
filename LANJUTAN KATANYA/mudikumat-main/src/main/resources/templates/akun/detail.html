@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail akun</title>
+</head>
+<body>
+<div th:fragment="content" id="detail-akun" class="kartu-kecil kartu solid bayangan flex-v gap-16">
+    <h3 class="nama"></h3>
+    <h4 class="deskripsi"></h4>
+    <div class="flex-v gap-32 bisa-discroll">
+        <div class="flex-h jc-space-between">
+            NIM/NIDN
+            <div class="id"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Nama pengguna
+            <div class="nama-pengguna"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Jenis kelamin
+            <div class="jenis-kelamin"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Daerah asal
+            <div class="daerah-asal"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Tempat lahir
+            <div class="tempat-lahir"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Tanggal lahir
+            <div class="tanggal-lahir"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Program studi
+            <div class="program-studi"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            Angkatan
+            <div class="angkatan"></div>
+        </div>
+        <div class="flex-v">
+            <h4>Jabatan saat ini</h4>
+            <ul class="jabatan-saat-ini"></ul>
+            <h4>Jabatan sebelumnya</h4>
+            <ul class="jabatan-sebelumnya"></ul>
+        </div>
+    </div>
+    <div class="flex-h jc-space-between">
+        <button type="reset" class="tombol border-berwarna tombol-bulat tombol-lebar tombol-tutup" onclick="tutupModal()">Tutup</button>
+        <button class="tombol berwarna tombol-bulat tombol-lebar tombol-edit">Edit</button>
+    </div>
+    <script>
+        $('#detail-akun .deskripsi').textillate({autoStart: false, in: {effect: 'rollIn'}});
+
+        $('#detail-akun .tombol-edit').click(function () {
+            editAkun($(entitasTerpilih).data('id'));
+        });
+
+        function detailAkun(id) {
+            $.get({
+                url: '/api/akun/' + id,
+                success: function (response) {
+                    $('#detail-akun .nama').text(response.nama);
+                    $.get({
+                        url: '/api/akun/' + id + '/deskripsi',
+                        success: function (response) {
+                            let deskripsi = $('#detail-akun .deskripsi');
+                            deskripsi.ubahTeks(response);
+                            deskripsi.textillate('in');
+                        }
+                    });
+                    $('#detail-akun .id').text(response.id);
+                    $('#detail-akun .nama-pengguna').text(response.namaPengguna);
+                    let jenisKelamin = ['Laki-laki', 'Perempuan'];
+                    $('#detail-akun .jenis-kelamin').text(jenisKelamin[response.jenisKelamin]);
+                    $('#detail-akun .daerah-asal').text(response.daerahAsal.nama);
+                    $('#detail-akun .tempat-lahir').text(response.tempatLahir.nama);
+                    const formatTanggal = {day: 'numeric', month: 'long', year: 'numeric'};
+                    $('#detail-akun .tanggal-lahir').text(new Date(response.tanggalLahir).toLocaleString('id-ID', formatTanggal));
+                    const programStudi = $('#detail-akun .program-studi');
+                    if (response.programStudi != null) {
+                        programStudi.text(response.programStudi.jenjang.nama + ' ' + response.programStudi.jurusan.nama);
+                        programStudi.parent().tampilkan();
+                    } else {
+                        programStudi.parent().hide();
+                    }
+                    const angkatan = $('#detail-akun .angkatan');
+                    if (response.angkatan != null) {
+                        angkatan.text(response.angkatan.nomor + ' (' + response.angkatan.nama + ')');
+                        angkatan.parent().tampilkan();
+                    } else {
+                        angkatan.parent().hide();
+                    }
+                    const jabatanSaatIni = $('.jabatan-saat-ini');
+                    const jabatanSebelumnya = $('.jabatan-sebelumnya');
+                    jabatanSaatIni.empty();
+                    jabatanSebelumnya.empty();
+                    for (jabatan of response.jabatan) {
+                        const li = $(document.createElement('li'));
+                        li.addClass('jabatan');
+                        li.data('id', jabatan.jabatan.id);
+                        li.text(jabatan.jabatan.nama);
+                        if (jabatan.akhirMenjabat == null || jabatan.akhirMenjabat > 2020) {
+                            $('.jabatan-saat-ini').append(li);
+                        } else {
+                            $('.jabatan-sebelumnya').append(li);
+                        }
+                        if (jabatan.divisi != null) {
+                            const a = $(document.createElement('a'));
+                            a.addClass('tombol-divisi');
+                            a.text(jabatan.divisi.nama);
+                            a.attr('href', '/divisi/' + jabatan.divisi.id + '/detail');
+                            li.append(' ');
+                            li.append(a);
+                        }
+                        const a = $(document.createElement('a'));
+                        a.addClass('tombol-organisasi');
+                        a.text(jabatan.organisasi.akronim);
+                        a.attr('href', '/organisasi/' + jabatan.organisasi.id + '/detail');
+                        li.append(' ');
+                        li.append(a);
+                        let akhirMenjabat = jabatan.akhirMenjabat;
+                        if (akhirMenjabat == null) {
+                            akhirMenjabat = 'sekarang';
+                        }
+                        li.append(' (' + jabatan.awalMenjabat + '—' + akhirMenjabat + ')');
+                    }
+                    if (jabatanSaatIni.is(':empty')) {
+                        jabatanSaatIni.text('-');
+                    }
+                    if (jabatanSebelumnya.is(':empty')) {
+                        jabatanSebelumnya.text('-');
+                    }
+                    $('#detail-akun').bukaModal();
+                }
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

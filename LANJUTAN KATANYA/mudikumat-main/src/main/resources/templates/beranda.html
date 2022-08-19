@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title>Beranda</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <main id="content" class="padding-32" sec:authorize="!isAuthenticated()">
+        <h1>Selamat datang di <span class="logo"><span class="logo-mudik">Mudik</span><span
+                class="logo-umat">Umat</span></span>!</h1>
+        <p>Sistem informasi mudik resmi Pemberdayaan Umat Berkelanjutan.</p>
+
+        <h3>Fitur utama</h3>
+        <ul>
+            <li>Mudah digunakan</li>
+            <li>Diamankan dengan teknologi Spring Security, kata sandi Anda sama sekali tidak disimpan di dalam basis
+                data
+            </li>
+            <li>Memiliki API yang mencakup sebagian besar data</li>
+            <li>Open source, dilisensikan di bawah Lisensi MIT</li>
+        </ul>
+
+        <h3>Fitur UI</h3>
+        <ul>
+            <li>Menerapkan pedoman desain material yang terinspirasi oleh Google Material Design</li>
+            <li>Mendukung tema gelap</li>
+            <li>Responsif</li>
+            <li>Ringan, karena dibuat tanpa CSS library (Bulma, Bootstrap, dll.)</li>
+        </ul>
+    </main>
+    <main id="content" sec:authorize="isAuthenticated()" class="flex-v ai-center gap-32 padding-32">
+        <div class="flex-v ai-center gap-8">
+            <h2 class="ucapan"></h2>
+            <h4 class="info">Saat ini terdapat <span class="jumlah-pemudik">0</span> pemudik dari <span
+                    class="jumlah-kabupaten">0</span> kabupaten/kota.</h4>
+            <div class="peta">
+                <img src="images/indonesia.svg" alt="Indonesia">
+                <div class="flex-v gap-8 teks">
+                    <h1 class="nama-kabupaten"></h1>
+                    <h4 class="nama-pemudik"></h4>
+                </div>
+            </div>
+        </div>
+        <div class="flex-h jc-center gap-16">
+            <a class="tombol berwarna tombol-bulat tombol-lebar" onclick="muatContent($('#tombol-mudik-saya'))">Mudik saya</a>
+            <a class="tombol berwarna tombol-bulat tombol-lebar" sec:authorize="hasRole('ROLE_ADMIN')" onclick="muatContent($('#panel-admin>*')[1])">Kelola mudik</a>
+        </div>
+        <script>
+            jam = new Date().getHours();
+            ucapan = $('.ucapan');
+
+            if (jam >= 3 && jam < 10) {
+                ucapan.text("Selamat pagi!");
+            } else if (jam >= 10 && jam < 15) {
+                ucapan.text("Selamat siang!");
+            } else if (jam >= 15 && jam < 19) {
+                ucapan.text("Selamat sore!");
+            } else {
+                ucapan.text("Selamat malam!");
+            }
+
+            min = [-11, 95];
+            max = [5.9, 141];
+            ukuran = [691.1, 256];
+            skala = [ukuran[0] / (max[1] - min[1]), ukuran[1] / (max[0] - min[0])];
+
+            $.get({
+                url: '/api/mudik/kabupaten',
+                success: async function (response) {
+                    const peta = $('.peta');
+                    peta.css('width', ukuran[0]);
+                    peta.css('height', ukuran[1]);
+                    for (kabupaten of response) {
+                        if ($('.peta').length > 0) {
+                            const koordinat = [(kabupaten.bujur - min[1]) * skala[0], (kabupaten.lintang - min[0]) * skala[1]];
+                            const titik = $(document.createElement('span'));
+                            titik.addClass('titik');
+                            titik.data('nama', kabupaten.nama);
+                            let daftarNamaPemudik = '';
+                            const jumlahPemudik = kabupaten.daftarNamaPemudik.length;
+                            $('.jumlah-kabupaten').text(parseInt($('.jumlah-kabupaten').text()) + 1);
+                            $('.jumlah-pemudik').text(parseInt($('.jumlah-pemudik').text()) + jumlahPemudik);
+                            for (let i = 0; i < jumlahPemudik; i++) {
+                                daftarNamaPemudik += kabupaten.daftarNamaPemudik[i];
+                                if (i < jumlahPemudik - 1) {
+                                    daftarNamaPemudik += ', ';
+                                }
+                            }
+                            titik.data('daftarNamaPemudik', daftarNamaPemudik);
+                            titik.css('left', koordinat[0]);
+                            titik.css('bottom', koordinat[1]);
+                            peta.append(titik);
+                            await new Promise(r => setTimeout(r, 50));
+                            titik.css('width', 8);
+                            titik.css('height', 8);
+                            await new Promise(r => setTimeout(r, 50));
+                        } else {
+                            return;
+                        }
+                    }
+
+                    while (true) {
+                        for (titik of $('.titik')) {
+                            if ($('.peta').length > 0) {
+                                $(titik).addClass('aktif');
+                                const teks = $('.teks');
+                                $('.nama-kabupaten').text($(titik).data('nama'));
+                                $('.nama-pemudik').text($(titik).data('daftarNamaPemudik'));
+                                teks.css('opacity', 1);
+                                await new Promise(r => setTimeout(r, 750));
+                                teks.css('opacity', 0);
+                                await new Promise(r => setTimeout(r, 250));
+                                $(titik).removeClass('aktif');
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    </main>
+</th:block>
+<th:block layout:fragment="modal">
+    <div th:replace="login :: login" sec:authorize="!isAuthenticated()"></div>
+</th:block>
+</body>
+</html>

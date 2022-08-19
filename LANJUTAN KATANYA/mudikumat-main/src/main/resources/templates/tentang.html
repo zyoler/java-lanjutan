@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}">
+<head>
+    <title>Tentang</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <main id="content" class="padding-32">
+        <h1 class="logo"><span class="logo-mudik">Mudik</span><span class="logo-umat">Umat</span></h1>
+        <p>Sistem informasi mudik resmi Pemberdayaan Umat Berkelanjutan.</p>
+        <p>Versi: 1.0.0 (Alpha)</p>
+        <p>Hak cipta 2021 Pemberdayaan Umat Berkelanjutan. Semua hak dilindungi undang-undang.</p>
+        <p>Developer: Romi Kusuma Bakti</p>
+        <p><span class="logo-mudik">Mudik</span><span class="logo-umat">Umat</span> bisa ada berkat proyek sumber terbuka yaitu Spring Boot, Spring Security, Thymeleaf, Lombok, JQuery, dan berbagai software sumber terbuka lainnya.</p>
+    </main>
+</th:block>
+<th:block layout:fragment="modal">
+    <div th:replace="login :: login" sec:authorize="!isAuthenticated()"></div>
+</th:block>
+</body>
+</html>

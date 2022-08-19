@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Kelola akun</title>
+</head>
+<body>
+<main layout:fragment="content" id="content" class="flex-v gap-4 padding-16">
+    <div class="flex-h gap-16 ai-baseline">
+        <h3>Kelola akun</h3>
+        <div class="penelusuran">
+            <span class="material-icons-outlined">search</span>
+            <input type="text" placeholder="Telusuri akun" aria-label="Telusuri akun" spellcheck="false">
+        </div>
+        <button id="tombol-buat" class="tombol berwarna tombol-bulat" onclick="buatAkun()">Buat</button>
+    </div>
+    <div class="daftar bisa-discroll flex-v">
+        <div class="baris header-daftar flex-h">
+            <div>Nama</div>
+            <div>Nama pengguna</div>
+            <div>NIM/NIDN</div>
+            <div>Deskripsi</div>
+            <div class="flex-h gap-8" hidden>
+                <div class="tombol-ikon-bulat"></div>
+                <div class="tombol-ikon-bulat"></div>
+            </div>
+        </div>
+        <div class="isi-daftar bisa-discroll">
+            <div th:each="akun: ${daftarAkun}" class="baris entitas flex-h tombol-detail-akun"
+                 th:data-id="${akun.id}">
+                <div th:text="${akun.nama}" class="nama"></div>
+                <div th:text="${akun.namaPengguna}" class="nama-pengguna"></div>
+                <div th:text="${akun.id}" class="id"></div>
+                <div th:text="${@akunService.getDeskripsi(akun.id)}" class="deskripsi"></div>
+                <div class="flex-h gap-8">
+                    <button class="tombol tombol-ikon-bulat tombol-edit" title="Edit akun">
+                        <span class="material-icons-outlined">edit</span>
+                    </button>
+                    <button class="tombol tombol-ikon-bulat tombol-hapus" title="Hapus akun">
+                        <span class="material-icons-outlined">delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var entitasTerpilih;
+
+        $('.isi-daftar .tombol-detail-akun').click(function (event) {
+            event.preventDefault();
+            entitasTerpilih = this;
+            detailAkun($(this).data('id'));
+        });
+
+        $('.isi-daftar .tombol-edit').click(function (event) {
+            event.stopPropagation();
+            entitasTerpilih = $(this).parents('.entitas');
+            editAkun(entitasTerpilih.data('id'));
+        });
+
+        $('.isi-daftar .tombol-hapus').click(function (event) {
+            event.stopPropagation();
+            entitasTerpilih = $(this).parents('.entitas');
+            konfirmasi('Hapus akun', 'Apakah Anda yakin ingin menghapus akun ' + entitasTerpilih.find('.nama').text() + ' (' + entitasTerpilih.data('id') + ')?', function () {
+                $.ajax({
+                    url: '/api/kelola/akun/' + entitasTerpilih.data('id'),
+                    contentType: 'application/json',
+                    type: 'DELETE',
+                    success: function () {
+                        entitasTerpilih.remove();
+                        tampilkanToast('Akun berhasil dihapus');
+                    }
+                });
+            }, function () {
+                entitasTerpilih = null;
+            });
+        });
+
+        $('.penelusuran>input').keyup(function () {
+            for (let entitas of $('.entitas')) {
+                const nama = $(entitas).find('.nama').text();
+                const namaPengguna = $(entitas).find('.nama-pengguna').text();
+                const nomor = $(entitas).find('.id').text();
+                if ((' ' + nama.toLowerCase() + ' ' + namaPengguna + ' ' + nomor).indexOf(' ' + $(this).val().toLowerCase()) > -1) {
+                    $(entitas).tampilkan();
+                } else {
+                    $(entitas).hide();
+                }
+            }
+        });
+
+        $.fn.perbaruiAkun = function () {
+            const akun = this;
+            const id = akun.data('id');
+            $.get({
+                url: '/api/akun/' + id,
+                success: function (response) {
+                    akun.find('.nama').text(response.nama);
+                    akun.find('.nama-pengguna').text(response.namaPengguna);
+                    $.get({
+                        url: '/api/akun/' + id + '/deskripsi',
+                        success: function (response) {
+                            akun.find('.deskripsi').text(response);
+                        }
+                    });
+                }
+            });
+        }
+
+        function buatAkun() {
+            $('#edit-akun h3').text('Buat akun');
+            $('#provinsi-asal').val(null);
+            $('#provinsi-lahir').val(null);
+            $('#program-studi').val(null);
+            $('#angkatan').val(null);
+            $('#edit-akun').bukaModal();
+        }
+    </script>
+</main>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Kelola informasi mudik</title>
+</head>
+<body>
+<main layout:fragment="content" id="content" class="flex-v gap-4 padding-16">
+    <div class="flex-h gap-16 ai-baseline">
+        <h3>Kelola informasi mudik</h3>
+        <div class="penelusuran">
+            <span class="material-icons-outlined">search</span>
+            <input type="text" placeholder="Telusuri mudik" aria-label="Telusuri informasi mudik" spellcheck="false">
+        </div>
+        <button id="tombol-buat" class="tombol berwarna tombol-bulat" onclick="buatMudik()">Buat</button>
+    </div>
+    <div class="daftar bisa-discroll flex-v">
+        <div class="baris header-daftar flex-h">
+            <div>Nama pemudik</div>
+            <div>Waktu berangkat</div>
+            <div>Waktu kembali</div>
+            <div>Kabupaten/kota tujuan</div>
+            <div>Provinsi tujuan</div>
+            <div class="flex-h gap-8" hidden>
+                <div class="tombol-ikon-bulat"></div>
+                <div class="tombol-ikon-bulat"></div>
+            </div>
+        </div>
+        <div class="isi-daftar bisa-discroll">
+            <div th:each="mudik: ${daftarMudik}" class="baris entitas flex-h tombol-detail-mudik"
+                 th:data-id="${mudik.id}">
+                <div th:text="${mudik.pemudik.nama}" class="nama"></div>
+                <div th:text="${#dates.format(mudik.berangkat, 'dd/MM/yyyy HH.mm')} + ' WIB'" class="berangkat"></div>
+                <div th:text="${#dates.format(mudik.kembali, 'dd/MM/yyyy HH.mm')} + ' WIB'" class="kembali"></div>
+                <div th:text="${mudik.tujuan.nama}" class="kabupaten-tujuan"></div>
+                <div th:text="${mudik.tujuan.provinsi.nama}" class="provinsi-tujuan"></div>
+                <div class="flex-h gap-8">
+                    <button class="tombol tombol-ikon-bulat tombol-edit" title="Edit mudik">
+                        <span class="material-icons-outlined">edit</span>
+                    </button>
+                    <button class="tombol tombol-ikon-bulat tombol-hapus" title="Hapus mudik">
+                        <span class="material-icons-outlined">delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $('.isi-daftar .tombol-edit').click(function (event) {
+            event.stopPropagation();
+            entitasTerpilih = $(this).parents('.entitas');
+            editMudik(entitasTerpilih.data('id'));
+        });
+
+        $('.isi-daftar .tombol-hapus').click(function (event) {
+            event.stopPropagation();
+            entitasTerpilih = $(this).parents('.entitas');
+            konfirmasi('Hapus informasi mudik', 'Apakah Anda yakin ingin menghapus informasi mudik dari ' + entitasTerpilih.find('.nama').text() + ' (' + entitasTerpilih.data('id') + ')?', function () {
+                $.ajax({
+                    url: '/api/kelola/mudik/' + entitasTerpilih.data('id'),
+                    contentType: 'application/json',
+                    type: 'DELETE',
+                    success: function () {
+                        entitasTerpilih.remove();
+                        tampilkanToast('Informasi mudik berhasil dihapus');
+                    }
+                });
+            }, function () {
+                entitasTerpilih = null;
+            });
+        });
+
+        $('.penelusuran>input').keyup(function () {
+            for (let entitas of $('.entitas')) {
+                const nama = $(entitas).find('.nama').text();
+                const kabupaten = $(entitas).find('.kabupaten').text();
+                const provinsi = $(entitas).find('.provinsi').text();
+                if ((' ' + nama.toLowerCase() + ' ' + kabupaten.toLowerCase() + ' ' + provinsi.toLowerCase()).indexOf(' ' + $(this).val().toLowerCase()) > -1) {
+                    $(entitas).tampilkan();
+                } else {
+                    $(entitas).hide();
+                }
+            }
+        });
+
+        $.fn.perbaruiMudik = function () {
+            function formatBilangan(bilangan, nol) {
+                return bilangan.toString().padStart(nol, '0');
+            }
+
+            function formatTanggal(tanggal) {
+                return formatBilangan(tanggal.getDate(), 2) + '/' + formatBilangan(tanggal.getMonth(), 2) + '/' + formatBilangan(tanggal.getFullYear(), 4) + ' ' + formatBilangan(tanggal.getHours(), 2) + '.' + formatBilangan(tanggal.getMinutes(), 2) + ' WIB';
+            }
+
+            const mudik = this;
+            const id = mudik.data('id');
+            $.get({
+                url: '/api/mudik/' + id,
+                success: function (response) {
+                    mudik.find('.nama').text(response.namaPemudik);
+                    mudik.find('.berangkat').text(formatTanggal(new Date(response.berangkat)));
+                    mudik.find('.kembali').text(formatTanggal(new Date(response.kembali)));
+                    mudik.find('.kabupaten-tujuan').text(response.tujuan.nama);
+                    mudik.find('.provinsi-tujuan').text(response.tujuan.provinsi.nama);
+                }
+            });
+        }
+
+        function buatMudik() {
+            $('#edit-mudik h3').text('Buat informasi mudik');
+            $('#tanggal-berangkat').val(null);
+            $('#waktu-berangkat').val(null);
+            $('#edit-mudik').bukaModal();
+        }
+    </script>
+</main>
+<th:block layout:fragment="modal">
+    <div th:replace="mudik/detail :: content"></div>
+    <div th:replace="mudik/edit :: content"></div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit akun</title>
+</head>
+<body>
+
+<div th:fragment="detail_akun" id="detail" class="kartu-kecil kartu solid bayangan flex-v gap-16">
+    <h3></h3>
+    <h4 class="deskripsi"></h4>
+    <div class="flex-v gap-32 bisa-discroll">
+        <div class="flex-h jc-space-between">
+            <div>NIM/NIDN</div>
+            <div class="id"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Nama pengguna</div>
+            <div class="nama-pengguna"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Jenis kelamin</div>
+            <div class="jenis-kelamin"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Daerah asal</div>
+            <div class="daerah-asal"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Tempat lahir</div>
+            <div class="tempat-lahir"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Tanggal lahir</div>
+            <div class="tanggal-lahir"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Program studi</div>
+            <div class="program-studi"></div>
+        </div>
+        <div class="flex-h jc-space-between">
+            <div>Angkatan</div>
+            <div class="angkatan"></div>
+        </div>
+    </div>
+    <div class="flex-h jc-space-between">
+        <button type="reset" class="tombol border-berwarna tombol-bulat tombol-lebar tombol-tutup">Tutup</button>
+        <button class="tombol berwarna tombol-bulat tombol-lebar tombol-edit">Edit</button>
+    </div>
+    <script>
+        $('#detail .deskripsi').textillate({autoStart: false, in: {effect: 'rollIn'}});
+
+        $('#detail .tombol-edit').click(function () {
+            edit($('#detail .id').text());
+        });
+
+        function detail(id) {
+            $.get({
+                url: '/api/akun/' + id,
+                success: function (response) {
+                    $('#detail h3').text(response.nama);
+                    $.get({
+                        url: '/api/akun/' + id + '/deskripsi',
+                        success: function (response) {
+                            let deskripsi = $('#detail .deskripsi');
+                            deskripsi.ubahTeks(response);
+                            deskripsi.textillate('in');
+                        }
+                    });
+                    $('#detail .id').text(response.id);
+                    $('#detail .nama-pengguna').text(response.namaPengguna);
+                    let jenisKelamin = ['Laki-laki', 'Perempuan'];
+                    $('#detail .jenis-kelamin').text(jenisKelamin[response.jenisKelamin]);
+                    $('#detail .daerah-asal').text(response.daerahAsal.nama);
+                    $('#detail .tempat-lahir').text(response.tempatLahir.nama);
+                    let formatTanggal = {day: 'numeric', month: 'long', year: 'numeric'};
+                    $('#detail .tanggal-lahir').text(new Date(response.tanggalLahir).toLocaleString('id-ID', formatTanggal));
+                    let programStudi = $('#detail .program-studi');
+                    if (response.programStudi != null) {
+                        programStudi.text(response.programStudi.jenjang.nama + ' ' + response.programStudi.jurusan.nama);
+                        programStudi.parent().tampilkan();
+                    } else {
+                        programStudi.parent().hide();
+                    }
+                    let angkatan = $('#detail .angkatan');
+                    if (response.angkatan != null) {
+                        angkatan.text(response.angkatan.nomor + ' (' + response.angkatan.nama + ')');
+                        angkatan.parent().tampilkan();
+                    } else {
+                        angkatan.parent().hide();
+                    }
+                    $('#detail').bukaModal();
+                }
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit mudik</title>
+</head>
+<body>
+<form th:fragment="content" id="edit-mudik" class="kartu-kecil kartu solid bayangan flex-v gap-16">
+    <h3>Edit informasi mudik</h3>
+    <div class="flex-v gap-32 bisa-discroll">
+        <div class="input">
+            <select id="akun">
+                <option th:each="akun: ${daftarAkun}"
+                        th:value="${akun.id}"
+                        th:text="${akun.nama} + ' (' + ${akun.id} + ')'"></option>
+            </select>
+            <label for="akun">Akun</label>
+        </div>
+        <div class="flex-v gap-16">
+            <h4>Berangkat</h4>
+            <div class="flex-h gap-16">
+                <div class="input">
+                    <input type="date" name="tanggalBerangkat" id="tanggal-berangkat">
+                    <label for="tanggal-berangkat">Tanggal</label>
+                </div>
+                <div class="input">
+                    <input type="time" name="waktuBerangkat" id="waktu-berangkat">
+                    <label for="waktu-berangkat">Waktu</label>
+                </div>
+            </div>
+        </div>
+        <div class="flex-v gap-16">
+            <h4>Kembali</h4>
+            <div class="flex-h gap-16">
+                <div class="input">
+                    <input type="date" name="tanggalKembali" id="tanggal-kembali">
+                    <label for="tanggal-kembali">Tanggal</label>
+                </div>
+                <div class="input">
+                    <input type="time" name="waktuKembali" id="waktu-kembali">
+                    <label for="waktu-kembali">Waktu</label>
+                </div>
+            </div>
+        </div>
+        <div class="flex-v gap-16">
+            <h4>Tujuan</h4>
+            <div class="flex-h gap-16">
+                <div class="input">
+                    <select id="provinsi-tujuan" class="provinsi">
+                        <option th:each="provinsi: ${daftarProvinsi}"
+                                th:value="${provinsi.id}"
+                                th:text="${provinsi.nama}"></option>
+                    </select>
+                    <label for="provinsi-tujuan">Provinsi</label>
+                </div>
+                <div class="input">
+                    <select name="tujuan" id="kabupaten-tujuan" class="kabupaten" required></select>
+                    <label for="kabupaten-tujuan">Kabupaten/kota</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="flex-h jc-space-between">
+        <button type="reset" class="tombol border-berwarna tombol-bulat tombol-lebar tombol-tutup"
+                onclick="tutupModal()">Batal
+        </button>
+        <button type="submit" class="tombol berwarna tombol-bulat tombol-lebar">Simpan</button>
+    </div>
+    <script>
+        function editMudik(id) {
+            $.get({
+                url: '/api/mudik/' + id,
+                success: function (response) {
+                    $('#edit-mudik h3').text('Edit informasi mudik (' + response.namaPemudik + ')');
+                    $('#akun').val(response.id);
+
+                    function formatBilangan(bilangan, nol) {
+                        return bilangan.toString().padStart(nol, '0');
+                    }
+
+                    function formatWaktu(tanggal) {
+                        return formatBilangan(tanggal.getHours(), 2) + ':' + formatBilangan(tanggal.getMinutes(), 2);
+                    }
+
+                    function formatTanggal(tanggal) {
+                        return formatBilangan(tanggal.getFullYear(), 4) + '-' + formatBilangan(tanggal.getMonth(), 2) + '-' + formatBilangan(tanggal.getDate(), 2);
+                    }
+
+                    const tanggalBerangkat = new Date(response.berangkat);
+                    $('#waktu-berangkat').val(formatWaktu(tanggalBerangkat));
+                    $('#tanggal-berangkat').val(formatTanggal(tanggalBerangkat));
+                    const tanggalKembali = new Date(response.kembali);
+                    $('#waktu-kembali').val(formatWaktu(tanggalKembali));
+                    $('#tanggal-kembali').val(formatTanggal(tanggalKembali));
+                    $('#provinsi-tujuan').val(response.tujuan.provinsi.id);
+                    $('#kabupaten-tujuan').data('nilai', response.tujuan.id);
+                    $('#edit-mudik .provinsi').change();
+                    $('#edit-mudik').bukaModal();
+                }
+            });
+        }
+
+        $('#nama').keyup(function () {
+            $('#edit-mudik h3').text('Edit mudik (' + $(this).val() + ')');
+        });
+
+        $('.provinsi').change(function () {
+            let elemen = $(this);
+            $.get({
+                url: '/api/provinsi/' + elemen.val() + '/kabupaten',
+                success: function (response) {
+                    let elemenKabupaten = elemen.parents('.flex-h').find('.kabupaten');
+                    elemenKabupaten.empty();
+                    for (let kabupaten of response) {
+                        elemenKabupaten.append((new Option(kabupaten.nama, kabupaten.id)));
+                    }
+                    elemenKabupaten.val(elemenKabupaten.data('nilai'));
+                }
+            });
+        })
+
+        $('#edit-mudik').submit(function (event) {
+            event.preventDefault();
+            $.ajax({
+                url: '/api/kelola/mudik/' + this.akun.value,
+                contentType: 'application/json',
+                type: 'PUT',
+                data: JSON.stringify({
+                    'berangkat': new Date(this.tanggalBerangkat.value + " " + this.waktuBerangkat.value),
+                    'kembali': new Date(this.tanggalKembali.value + " " + this.waktuKembali.value),
+                    'tujuan': {'id': this.tujuan.value}
+                }),
+                success: function () {
+                    tampilkanToast('Informasi mudik berhasil disimpan')
+                    $('#edit-mudik').find('.tombol-tutup').click();
+                    entitasTerpilih.perbaruiMudik();
+                    if ($('#detail').is(':visible')) {
+                        detail($(entitasTerpilih).data('id'));
+                        modalTerbuka.pop();
+                    }
+                }
+            });
+        });
+    </script>
+</form>
+</body>
+</html>
